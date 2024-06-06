@@ -1,94 +1,96 @@
-import altair as alt
-import numpy as np
-import pandas as pd
-import streamlit as st
-
-"""
-# Welcome to Streamlit!
-
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
-
 import streamlit as st
 import pandas as pd
 
 # Title and description
 st.title("Personal Finance Manager")
-st.write("Manage your income, expenses, and budgets effectively.")
+st.write("Manage your income, debits, and monthly budget effectively.")
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Dashboard", "Income Tracker", "Expense Tracker", "Budget Planner", "Reports"])
+page = st.sidebar.radio("Go to", ["Dashboard", "Income & Debits", "Monthly Planner", "Reports"])
 
 # Placeholder for data storage
 if 'income_data' not in st.session_state:
-    st.session_state['income_data'] = pd.DataFrame(columns=['Date', 'Source', 'Amount'])
+    st.session_state['income_data'] = pd.DataFrame(columns=['Date', 'Description', 'Amount'])
 
-if 'expense_data' not in st.session_state:
-    st.session_state['expense_data'] = pd.DataFrame(columns=['Date', 'Category', 'Amount'])
+if 'debit_data' not in st.session_state:
+    st.session_state['debit_data'] = pd.DataFrame(columns=['Date', 'Description', 'Amount'])
 
 # Dashboard
 if page == "Dashboard":
     st.header("Dashboard")
     st.write("Overview of your financial status.")
 
-    # Example charts and summaries
+    # Summary of income and debits
     st.subheader("Total Income")
     st.write(st.session_state['income_data']['Amount'].sum())
-    st.subheader("Total Expenses")
-    st.write(st.session_state['expense_data']['Amount'].sum())
+    
+    st.subheader("Total Debits")
+    st.write(st.session_state['debit_data']['Amount'].sum())
 
-# Income Tracker
-elif page == "Income Tracker":
-    st.header("Income Tracker")
-    st.write("Log and view your income sources.")
+    # Display data
+    st.subheader("Income Data")
+    st.write(st.session_state['income_data'])
+    
+    st.subheader("Debit Data")
+    st.write(st.session_state['debit_data'])
 
+# Income & Debits
+elif page == "Income & Debits":
+    st.header("Income & Debits")
+    st.write("Log your income and debits.")
+
+    # Income Form
     with st.form("income_form"):
-        date = st.date_input("Date")
-        source = st.text_input("Source")
-        amount = st.number_input("Amount", min_value=0.0)
-        submit = st.form_submit_button("Add Income")
-        if submit:
-            st.session_state['income_data'] = st.session_state['income_data'].append(
-                {'Date': date, 'Source': source, 'Amount': amount}, ignore_index=True)
+        st.subheader("Log Income")
+        income_date = st.date_input("Date", key="income_date")
+        income_desc = st.text_input("Description", key="income_desc")
+        income_amount = st.number_input("Amount", min_value=0.0, key="income_amount")
+        income_submit = st.form_submit_button("Add Income")
+        if income_submit:
+            new_income = {'Date': income_date, 'Description': income_desc, 'Amount': income_amount}
+            st.session_state['income_data'] = st.session_state['income_data'].append(new_income, ignore_index=True)
             st.success("Income added!")
 
-    st.write(st.session_state['income_data'])
+    # Debit Form
+    with st.form("debit_form"):
+        st.subheader("Log Debit")
+        debit_date = st.date_input("Date", key="debit_date")
+        debit_desc = st.text_input("Description", key="debit_desc")
+        debit_amount = st.number_input("Amount", min_value=0.0, key="debit_amount")
+        debit_submit = st.form_submit_button("Add Debit")
+        if debit_submit:
+            new_debit = {'Date': debit_date, 'Description': debit_desc, 'Amount': debit_amount}
+            st.session_state['debit_data'] = st.session_state['debit_data'].append(new_debit, ignore_index=True)
+            st.success("Debit added!")
 
-# Expense Tracker
-elif page == "Expense Tracker":
-    st.header("Expense Tracker")
-    st.write("Log and categorize your expenses.")
+# Monthly Planner
+elif page == "Monthly Planner":
+    st.header("Monthly Planner")
+    st.write("Plan your monthly finances.")
 
-    with st.form("expense_form"):
-        date = st.date_input("Date")
-        category = st.text_input("Category")
-        amount = st.number_input("Amount", min_value=0.0)
-        submit = st.form_submit_button("Add Expense")
-        if submit:
-            st.session_state['expense_data'] = st.session_state['expense_data'].append(
-                {'Date': date, 'Category': category, 'Amount': amount}, ignore_index=True)
-            st.success("Expense added!")
-
-    st.write(st.session_state['expense_data'])
-
-# Budget Planner
-elif page == "Budget Planner":
-    st.header("Budget Planner")
-    st.write("Set and monitor your budget goals.")
-
-    # Example budget setting
-    budget = st.number_input("Set your monthly budget", min_value=0.0)
+    if 'monthly_budget' not in st.session_state:
+        st.session_state['monthly_budget'] = 0.0
+    
+    budget = st.number_input("Set your monthly budget", min_value=0.0, value=st.session_state['monthly_budget'])
+    st.session_state['monthly_budget'] = budget
     st.write(f"Your monthly budget is set to {budget}")
+
+    st.subheader("Monthly Summary")
+    total_income = st.session_state['income_data']['Amount'].sum()
+    total_debits = st.session_state['debit_data']['Amount'].sum()
+    net_savings = total_income - total_debits
+    budget_balance = budget - total_debits
+    
+    st.write(f"Total Income: {total_income}")
+    st.write(f"Total Debits: {total_debits}")
+    st.write(f"Net Savings: {net_savings}")
+    st.write(f"Budget Balance: {budget_balance}")
 
 # Reports
 elif page == "Reports":
     st.header("Reports")
     st.write("Generate and view monthly/annual financial reports.")
-
-    # Example report generation
+    
+    # Placeholder for future implementation
     st.write("Coming soon!")
